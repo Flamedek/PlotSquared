@@ -20,6 +20,7 @@ package com.plotsquared.core.collection;
 
 import com.plotsquared.core.util.RegionUtil;
 import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -115,7 +116,7 @@ public class QuadMap<T> {
             this.objects.add(area);
             return;
         }
-        CuboidRegion region = getRegion(area);
+        Region region = getRegion(area);
         if (region.getMinimumPoint().getX() >= this.x) {
             if (region.getMinimumPoint().getZ() >= this.z) {
                 if (this.one == null) {
@@ -167,7 +168,7 @@ public class QuadMap<T> {
         this.objects.add(area);
     }
 
-    public CuboidRegion getRegion(T value) {
+    public Region getRegion(T value) {
         return null;
     }
 
@@ -175,7 +176,7 @@ public class QuadMap<T> {
         try {
             return new QuadMap<T>(newsize, x, z, min) {
                 @Override
-                public CuboidRegion getRegion(T value) {
+                public Region getRegion(T value) {
                     return QuadMap.this.getRegion(value);
                 }
             };
@@ -196,7 +197,7 @@ public class QuadMap<T> {
                 this.skip = null;
             }
         } else {
-            CuboidRegion region = getRegion(area);
+            Region region = getRegion(area);
             if (region.getMinimumPoint().getX() >= this.x) {
                 if (region.getMinimumPoint().getZ() >= this.z) {
                     if (this.one != null) {
@@ -249,7 +250,7 @@ public class QuadMap<T> {
         this.skip = map.skip == null ? map : map.skip;
     }
 
-    public Set<T> get(CuboidRegion region) {
+    public Set<T> get(Region region) {
         HashSet<T> set = new HashSet<>();
         if (this.objects != null) {
             for (T obj : this.objects) {
@@ -279,10 +280,17 @@ public class QuadMap<T> {
         return set;
     }
 
-    public boolean intersects(CuboidRegion other) {
-        return (other.getMinimumPoint().getX() <= this.x + this.size) && (
-                other.getMaximumPoint().getX() >= this.x - this.size) && (other.getMinimumPoint().getZ()
-                <= this.z + this.size) && (other.getMaximumPoint().getZ() >= this.z - this.size);
+    public boolean intersects(Region other) {
+        if (other instanceof CuboidRegion) {
+            return (other.getMinimumPoint().getX() <= this.x + this.size) && (
+                    other.getMaximumPoint().getX() >= this.x - this.size) && (other.getMinimumPoint().getZ()
+                    <= this.z + this.size) && (other.getMaximumPoint().getZ() >= this.z - this.size);
+        } else {
+            return RegionUtil.contains(other, this.x - size, this.z - size) ||
+                    RegionUtil.contains(other, this.x + size, this.z - size) ||
+                    RegionUtil.contains(other, this.x - size, this.z + size) ||
+                    RegionUtil.contains(other, this.x + size, this.z + size);
+        }
     }
 
     public T get(int x, int z) {

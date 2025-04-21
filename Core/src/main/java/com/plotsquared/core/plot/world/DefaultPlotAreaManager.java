@@ -24,7 +24,7 @@ import com.plotsquared.core.plot.PlotArea;
 import com.plotsquared.core.plot.PlotAreaType;
 import com.plotsquared.core.plot.PlotWorld;
 import com.plotsquared.core.util.StringMan;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -125,7 +125,7 @@ public class DefaultPlotAreaManager implements PlotAreaManager {
     }
 
     @Override
-    public @NonNull PlotArea[] getPlotAreas(final @NonNull String world, final @Nullable CuboidRegion region) {
+    public @NonNull PlotArea[] getPlotAreas(final @NonNull String world, final @Nullable Region region) {
         final PlotWorld plotWorld = this.plotWorlds.get(world);
         if (plotWorld == null) {
             return noPlotAreas;

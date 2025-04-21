@@ -56,6 +56,7 @@ import com.plotsquared.core.util.task.TaskTime;
 import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.biome.BiomeType;
 import com.sk89q.worldedit.world.biome.BiomeTypes;
 import com.sk89q.worldedit.world.gamemode.GameMode;
@@ -150,7 +151,7 @@ public abstract class PlotArea implements ComponentLike {
     private int borderSize = 1;
     private boolean useEconomy = false;
     private int hash;
-    private CuboidRegion region;
+    private Region region;
     private ConcurrentHashMap<String, Object> meta;
     private QuadMap<PlotCluster> clusters;
     private String signMaterial = "OAK_WALL_SIGN";
@@ -223,9 +224,9 @@ public abstract class PlotArea implements ComponentLike {
      * Returns the region for this PlotArea, or a CuboidRegion encompassing
      * the whole world if none exists.
      *
-     * @return CuboidRegion
+     * @return Region
      */
-    public CuboidRegion getRegion() {
+    public Region getRegion() {
         this.region = getRegionAbs();
         if (this.region == null) {
             return new CuboidRegion(
@@ -239,9 +240,9 @@ public abstract class PlotArea implements ComponentLike {
     /**
      * Returns the region for this PlotArea.
      *
-     * @return CuboidRegion or null if no applicable region
+     * @return Region or null if no applicable region
      */
-    private CuboidRegion getRegionAbs() {
+    private Region getRegionAbs() {
         if (this.region == null) {
             if (this.min != null) {
                 Location bot = getPlotManager().getPlotBottomLocAbs(this.min);
@@ -1183,7 +1184,7 @@ public abstract class PlotArea implements ComponentLike {
         if (this.clusters == null) {
             this.clusters = new QuadMap<>(Integer.MAX_VALUE, 0, 0, 62) {
                 @Override
-                public CuboidRegion getRegion(PlotCluster value) {
+                public Region getRegion(PlotCluster value) {
                     BlockVector2 pos1 = BlockVector2.at(value.getP1().getX(), value.getP1().getY());
                     BlockVector2 pos2 = BlockVector2.at(value.getP2().getX(), value.getP2().getY());
                     return new CuboidRegion(

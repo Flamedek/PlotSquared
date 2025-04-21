@@ -50,6 +50,7 @@ import com.plotsquared.core.util.task.TaskTime;
 import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.biome.BiomeType;
 import com.sk89q.worldedit.world.block.BaseBlock;
 import com.sk89q.worldedit.world.block.BlockState;
@@ -119,7 +120,7 @@ public class HybridUtils {
         plotManager.regenerateAllPlotWalls(null);
     }
 
-    public void analyzeRegion(final String world, final CuboidRegion region, final RunnableVal<PlotAnalysis> whenDone) {
+    public void analyzeRegion(final String world, final Region region, final RunnableVal<PlotAnalysis> whenDone) {
         // int diff, int variety, int vertices, int rotation, int height_sd
         /*
          * diff: compare to base by looping through all blocks
@@ -314,7 +315,7 @@ public class HybridUtils {
     }
 
     public void analyzePlot(final Plot origin, final RunnableVal<PlotAnalysis> whenDone) {
-        final ArrayDeque<CuboidRegion> zones = new ArrayDeque<>(origin.getRegions());
+        final ArrayDeque<Region> zones = new ArrayDeque<>(origin.getRegions());
         final ArrayList<PlotAnalysis> analysis = new ArrayList<>();
         Runnable run = new Runnable() {
             @Override
@@ -369,7 +370,7 @@ public class HybridUtils {
                     TaskManager.runTask(whenDone);
                     return;
                 }
-                CuboidRegion region = zones.poll();
+                Region region = zones.poll();
                 final Runnable task = this;
                 analyzeRegion(origin.getWorldName(), region, new RunnableVal<>() {
                     @Override

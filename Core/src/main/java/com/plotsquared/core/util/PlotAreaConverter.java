@@ -19,7 +19,7 @@
 package com.plotsquared.core.util;
 
 import com.plotsquared.core.plot.PlotArea;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import org.khelekore.prtree.MBRConverter;
 
 public class PlotAreaConverter implements MBRConverter<PlotArea> {
@@ -35,7 +35,7 @@ public class PlotAreaConverter implements MBRConverter<PlotArea> {
 
     @Override
     public double getMin(final int axis, final PlotArea area) {
-        final CuboidRegion region = area.getRegion();
+        final Region region = area.getRegion();
         if (axis == AXIS_X) {
             return region.getMinimumPoint().getX();
         } else if (axis == AXIS_Y) {
@@ -49,7 +49,7 @@ public class PlotAreaConverter implements MBRConverter<PlotArea> {
 
     @Override
     public double getMax(final int axis, final PlotArea area) {
-        final CuboidRegion region = area.getRegion();
+        final Region region = area.getRegion();
         if (axis == AXIS_X) {
             return region.getMaximumPoint().getX();
         } else if (axis == AXIS_Y) {

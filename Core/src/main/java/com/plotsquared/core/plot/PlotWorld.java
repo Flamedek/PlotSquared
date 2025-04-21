@@ -19,7 +19,7 @@
 package com.plotsquared.core.plot;
 
 import com.plotsquared.core.location.Location;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -67,7 +67,7 @@ public abstract class PlotWorld {
      */
     public @NonNull
     abstract Collection<PlotArea> getAreasInRegion(
-            final @NonNull CuboidRegion region
+            final @NonNull Region region
     );
 
     /**

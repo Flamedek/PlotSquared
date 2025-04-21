@@ -26,6 +26,7 @@ import com.plotsquared.core.plot.PlotId;
 import com.plotsquared.core.plot.flag.PlotFlag;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.Collection;
@@ -37,7 +38,7 @@ import java.util.function.Consumer;
 
 public class SinglePlot extends Plot {
 
-    private final Set<CuboidRegion> regions = Collections.singleton(
+    private final Set<Region> regions = Collections.singleton(
             new CuboidRegion(
                     BlockVector3.at(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE),
                     BlockVector3.at(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE)
@@ -80,7 +81,7 @@ public class SinglePlot extends Plot {
 
     @NonNull
     @Override
-    public Set<CuboidRegion> getRegions() {
+    public Set<Region> getRegions() {
         return regions;
     }
 

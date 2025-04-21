@@ -18,6 +18,7 @@
  */
 package com.plotsquared.core.generator;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.plotsquared.core.PlotSquared;
 import com.plotsquared.core.configuration.Settings;
@@ -35,12 +36,14 @@ import com.plotsquared.core.util.RegionManager;
 import com.plotsquared.core.util.task.TaskManager;
 import com.sk89q.worldedit.function.pattern.Pattern;
 import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.block.BlockTypes;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * A plot manager with square plots which tessellate on a square grid with the following sections: ROAD, WALL, BORDER (wall), PLOT, FLOOR (plot).
@@ -108,16 +111,15 @@ public class ClassicPlotManager extends SquarePlotManager {
     ) {
         Plot plot = classicPlotWorld.getPlotAbs(plotId);
         if (plot != null && plot.isBasePlot()) {
-            return this.regionManager
-                    .setCuboids(
-                            classicPlotWorld,
-                            plot.getRegions(),
-                            blocks,
-                            classicPlotWorld.PLOT_HEIGHT,
-                            classicPlotWorld.PLOT_HEIGHT,
-                            actor,
-                            queue
-                    );
+            return this.regionManager.setCuboids(
+                    classicPlotWorld,
+                    requireCuboidRegions(plot),
+                    blocks,
+                    classicPlotWorld.PLOT_HEIGHT,
+                    classicPlotWorld.PLOT_HEIGHT,
+                    actor,
+                    queue
+            );
         }
         return false;
     }
@@ -141,7 +143,7 @@ public class ClassicPlotManager extends SquarePlotManager {
         if (plot != null && plot.isBasePlot()) {
             return this.regionManager.setCuboids(
                     classicPlotWorld,
-                    plot.getRegions(),
+                    requireCuboidRegions(plot),
                     blocks,
                     classicPlotWorld.getMinComponentHeight(),
                     classicPlotWorld.getMaxBuildHeight() - 1,
@@ -169,16 +171,15 @@ public class ClassicPlotManager extends SquarePlotManager {
     ) {
         Plot plot = classicPlotWorld.getPlotAbs(plotId);
         if (plot != null && plot.isBasePlot()) {
-            return this.regionManager
-                    .setCuboids(
-                            classicPlotWorld,
-                            plot.getRegions(),
-                            blocks,
-                            classicPlotWorld.PLOT_HEIGHT + 1,
-                            classicPlotWorld.getMaxBuildHeight() - 1,
-                            actor,
-                            queue
-                    );
+            return this.regionManager.setCuboids(
+                    classicPlotWorld,
+                    requireCuboidRegions(plot),
+                    blocks,
+                    classicPlotWorld.PLOT_HEIGHT + 1,
+                    classicPlotWorld.getMaxBuildHeight() - 1,
+                    actor,
+                    queue
+            );
         }
         return false;
     }
@@ -202,7 +203,7 @@ public class ClassicPlotManager extends SquarePlotManager {
         if (plot == null || plot.isBasePlot()) {
             return this.regionManager.setCuboids(
                     classicPlotWorld,
-                    plot.getRegions(),
+                    requireCuboidRegions(plot),
                     blocks,
                     classicPlotWorld.getMinComponentHeight(),
                     classicPlotWorld.PLOT_HEIGHT - 1,
@@ -316,7 +317,7 @@ public class ClassicPlotManager extends SquarePlotManager {
             }
         }
         if (plot.isBasePlot()) {
-            for (CuboidRegion region : plot.getRegions()) {
+            for (CuboidRegion region : requireCuboidRegions(plot)) {
                 Location pos1 = Location.at(
                         classicPlotWorld.getWorldName(),
                         region.getMinimumPoint().getX(),
@@ -836,6 +837,15 @@ public class ClassicPlotManager extends SquarePlotManager {
         plot = plot.getBasePlot(false);
         final Location bot = plot.getBottomAbs();
         return Location.at(classicPlotWorld.getWorldName(), bot.getX() - 1, classicPlotWorld.ROAD_HEIGHT + 1, bot.getZ() - 2);
+    }
+
+    protected Set<CuboidRegion> requireCuboidRegions(Plot plot) {
+        Set<? extends Region> regions = plot.getRegions();
+        regions.forEach((region) -> {
+            Preconditions.checkArgument(region instanceof CuboidRegion, "Current PlotManager requires Cuboid Regions");
+        });
+        //noinspection unchecked
+        return (Set<CuboidRegion>) regions;
     }
 
 }

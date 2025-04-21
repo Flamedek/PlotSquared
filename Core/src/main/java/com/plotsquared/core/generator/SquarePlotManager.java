@@ -27,7 +27,7 @@ import com.plotsquared.core.plot.PlotId;
 import com.plotsquared.core.queue.QueueCoordinator;
 import com.plotsquared.core.util.HashUtil;
 import com.plotsquared.core.util.RegionManager;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -59,7 +59,7 @@ public abstract class SquarePlotManager extends GridPlotManager {
             @Nullable PlotPlayer<?> actor,
             @Nullable QueueCoordinator queue
     ) {
-        final Set<CuboidRegion> regions = plot.getRegions();
+        final Set<Region> regions = plot.getRegions();
         Runnable run = new Runnable() {
             @Override
             public void run() {
@@ -69,11 +69,12 @@ public abstract class SquarePlotManager extends GridPlotManager {
                     }
                     return;
                 }
-                Iterator<CuboidRegion> iterator = regions.iterator();
-                CuboidRegion region = iterator.next();
+                Iterator<Region> iterator = regions.iterator();
+                Region region = iterator.next();
                 iterator.remove();
                 final Location pos1 = Location.at(plot.getWorldName(), region.getMinimumPoint());
                 final Location pos2 = Location.at(plot.getWorldName(), region.getMaximumPoint());
+                // TODO create version that takes the actual region, or a mask
                 regionManager.regenerateRegion(pos1, pos2, false, this);
             }
         };

@@ -33,7 +33,7 @@ import com.sk89q.worldedit.entity.Player;
 import com.sk89q.worldedit.event.extent.EditSessionEvent;
 import com.sk89q.worldedit.extension.platform.Actor;
 import com.sk89q.worldedit.extent.NullExtent;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.util.Location;
 import com.sk89q.worldedit.util.eventbus.EventHandler.Priority;
 import com.sk89q.worldedit.util.eventbus.Subscribe;
@@ -74,7 +74,7 @@ public class WESubscriber {
         if (actor != null && actor.isPlayer()) {
             String name = actor.getName();
             final PlotPlayer<?> plotPlayer = PlotSquared.platform().playerManager().getPlayerIfExists(name);
-            Set<CuboidRegion> mask;
+            Set<Region> mask;
             if (plotPlayer == null) {
                 Player player = (Player) actor;
                 Location location = player.getLocation();

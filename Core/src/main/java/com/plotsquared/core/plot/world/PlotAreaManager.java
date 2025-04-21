@@ -22,7 +22,7 @@ import com.plotsquared.core.location.Location;
 import com.plotsquared.core.plot.PlotArea;
 import com.plotsquared.core.plot.PlotAreaType;
 import com.plotsquared.core.util.StringMan;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -76,7 +76,7 @@ public interface PlotAreaManager {
      * @param region Optional region
      * @return All plots in the region
      */
-    @NonNull PlotArea[] getPlotAreas(@NonNull String world, @Nullable CuboidRegion region);
+    @NonNull PlotArea[] getPlotAreas(@NonNull String world, @Nullable Region region);
 
     /**
      * Get all plot areas recognized by PlotSquared
@@ -123,7 +123,7 @@ public interface PlotAreaManager {
     void removeWorld(@NonNull String worldName);
 
     /**
-     * Method that delegates to {@link #getPlotAreas(String, CuboidRegion)} but returns an
+     * Method that delegates to {@link #getPlotAreas(String, Region)} but returns an
      * immutable set, instead of an array
      *
      * @param world  World name
@@ -132,7 +132,7 @@ public interface PlotAreaManager {
      */
     default @NonNull Set<@NonNull PlotArea> getPlotAreasSet(
             final @NonNull String world,
-            final @Nullable CuboidRegion region
+            final @Nullable Region region
     ) {
         final PlotArea[] areas = this.getPlotAreas(world, region);
         final Set<PlotArea> set = new HashSet<>();
@@ -141,7 +141,7 @@ public interface PlotAreaManager {
     }
 
     /**
-     * Method identical to {@link #getPlotAreasSet(String, CuboidRegion)} but that
+     * Method identical to {@link #getPlotAreasSet(String, Region)} but that
      * does not take in a region, and returns a modifiable set
      *
      * @param world World name

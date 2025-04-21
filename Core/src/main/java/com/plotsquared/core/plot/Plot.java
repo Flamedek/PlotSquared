@@ -67,6 +67,7 @@ import com.plotsquared.core.util.task.TaskManager;
 import com.plotsquared.core.util.task.TaskTime;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.biome.BiomeType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
@@ -437,7 +438,7 @@ public class Plot {
     }
 
     @NonNull
-    static Location[] getCorners(final @NonNull String world, final @NonNull CuboidRegion region) {
+    static Location[] getCorners(final @NonNull String world, final @NonNull Region region) {
         final BlockVector3 min = region.getMinimumPoint();
         final BlockVector3 max = region.getMaximumPoint();
         return new Location[]{Location.at(world, min), Location.at(world, max)};
@@ -1350,7 +1351,7 @@ public class Plot {
      */
     @Deprecated
     public Location getSideSynchronous() {
-        CuboidRegion largest = getLargestRegion();
+        Region largest = getLargestRegion();
         int x = (largest.getMaximumPoint().getX() >> 1) - (largest.getMinimumPoint().getX() >> 1) + largest
                 .getMinimumPoint()
                 .getX();
@@ -1364,7 +1365,7 @@ public class Plot {
     }
 
     public void getSide(Consumer<Location> result) {
-        CuboidRegion largest = getLargestRegion();
+        Region largest = getLargestRegion();
         int x = (largest.getMaximumPoint().getX() >> 1) - (largest.getMinimumPoint().getX() >> 1) + largest
                 .getMinimumPoint()
                 .getX();
@@ -1520,7 +1521,7 @@ public class Plot {
                             : loc.getY();
                     return Location.at(plot.getWorldName(), 0, y, 0, 0, 0);
                 }
-                CuboidRegion largest = plot.getLargestRegion();
+                Region largest = plot.getLargestRegion();
                 x = (largest.getMaximumPoint().getX() >> 1) - (largest.getMinimumPoint().getX() >> 1) + largest
                         .getMinimumPoint()
                         .getX();
@@ -1567,7 +1568,7 @@ public class Plot {
                     x = 0;
                     z = 0;
                 } else {
-                    CuboidRegion largest = plot.getLargestRegion();
+                    Region largest = plot.getLargestRegion();
                     x = (largest.getMaximumPoint().getX() >> 1) - (largest.getMinimumPoint().getX() >> 1) + largest
                             .getMinimumPoint()
                             .getX();
@@ -1608,7 +1609,7 @@ public class Plot {
 
     public double getVolume() {
         double count = 0;
-        for (CuboidRegion region : getRegions()) {
+        for (Region region : getRegions()) {
             // CuboidRegion#getArea is deprecated and we want to ensure use of correct height
             count += region.getLength() * region.getWidth() * (area.getMaxGenHeight() - area.getMinGenHeight() + 1);
         }
@@ -2373,15 +2374,15 @@ public class Plot {
      *
      * @return all regions within the plot
      */
-    public @NonNull Set<CuboidRegion> getRegions() {
+    public @NonNull Set<Region> getRegions() {
         if (!this.isMerged()) {
             Location pos1 = this.getBottomAbs().withY(getArea().getMinBuildHeight());
             Location pos2 = this.getTopAbs().withY(getArea().getMaxBuildHeight());
-            CuboidRegion rg = new CuboidRegion(pos1.getBlockVector3(), pos2.getBlockVector3());
+            Region rg = new CuboidRegion(pos1.getBlockVector3(), pos2.getBlockVector3());
             return Collections.singleton(rg);
         }
         Set<Plot> plots = this.getConnectedPlots();
-        Set<CuboidRegion> regions = new HashSet<>();
+        Set<Region> regions = new HashSet<>();
         Set<PlotId> visited = new HashSet<>();
         for (Plot current : plots) {
             if (visited.contains(current.getId())) {
@@ -2507,11 +2508,11 @@ public class Plot {
      *
      * @return the plot's largest CuboidRegion
      */
-    public CuboidRegion getLargestRegion() {
-        Set<CuboidRegion> regions = this.getRegions();
-        CuboidRegion max = null;
+    public Region getLargestRegion() {
+        Set<Region> regions = this.getRegions();
+        Region max = null;
         double area = Double.NEGATIVE_INFINITY;
-        for (CuboidRegion region : regions) {
+        for (Region region : regions) {
             double current = (region.getMaximumPoint().getX() - (double) region.getMinimumPoint().getX() + 1) * (
                     region.getMaximumPoint().getZ() - (double) region.getMinimumPoint().getZ() + 1);
             if (current > area) {

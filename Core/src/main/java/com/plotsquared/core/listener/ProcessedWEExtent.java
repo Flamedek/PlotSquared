@@ -18,6 +18,7 @@
  */
 package com.plotsquared.core.listener;
 
+import com.google.common.collect.Lists;
 import com.plotsquared.core.configuration.Settings;
 import com.plotsquared.core.util.WEManager;
 import com.plotsquared.core.util.WorldUtil;
@@ -27,9 +28,13 @@ import com.sk89q.worldedit.entity.Entity;
 import com.sk89q.worldedit.extent.AbstractDelegateExtent;
 import com.sk89q.worldedit.extent.Extent;
 import com.sk89q.worldedit.extent.NullExtent;
+import com.sk89q.worldedit.function.mask.Mask;
+import com.sk89q.worldedit.function.mask.Mask2D;
+import com.sk89q.worldedit.function.mask.RegionMask;
 import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.regions.RegionIntersection;
 import com.sk89q.worldedit.util.Location;
 import com.sk89q.worldedit.world.biome.BiomeType;
 import com.sk89q.worldedit.world.block.BaseBlock;
@@ -44,7 +49,8 @@ import java.util.Set;
 
 public class ProcessedWEExtent extends AbstractDelegateExtent {
 
-    private final Set<CuboidRegion> mask;
+    private final Mask mask;
+    private final Mask2D mask2D;
     private final String world;
     private final int max;
     private final WorldUtil worldUtil;
@@ -56,7 +62,25 @@ public class ProcessedWEExtent extends AbstractDelegateExtent {
 
     public ProcessedWEExtent(
             String world,
-            Set<CuboidRegion> mask,
+            Set<Region> mask,
+            int max,
+            Extent child,
+            Extent parent,
+            final @NonNull WorldUtil worldUtil
+    ) {
+        this(
+            world,
+            new RegionMask(new RegionIntersection(Lists.newArrayList(mask))),
+            max,
+            child,
+            parent,
+            worldUtil
+        );
+    }
+
+    public ProcessedWEExtent(
+            String world,
+            Mask mask,
             int max,
             Extent child,
             Extent parent,
@@ -64,6 +88,7 @@ public class ProcessedWEExtent extends AbstractDelegateExtent {
     ) {
         super(child);
         this.mask = mask;
+        this.mask2D = mask.toMask2D();
         this.world = world;
         this.worldUtil = worldUtil;
         if (max == -1) {
@@ -154,7 +179,7 @@ public class ProcessedWEExtent extends AbstractDelegateExtent {
     @SuppressWarnings("deprecation")
     @Override
     public boolean setBiome(BlockVector2 position, BiomeType biome) {
-        return WEManager.maskContains(this.mask, position.getX(), position.getZ()) && super
+        return WEManager.maskContains(this.mask2D, position.getX(), position.getZ()) && super
                 .setBiome(position, biome);
     }
 

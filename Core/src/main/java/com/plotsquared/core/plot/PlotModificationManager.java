@@ -42,7 +42,7 @@ import com.plotsquared.core.util.task.TaskManager;
 import com.plotsquared.core.util.task.TaskTime;
 import com.sk89q.worldedit.function.pattern.Pattern;
 import com.sk89q.worldedit.math.BlockVector2;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.biome.BiomeType;
 import com.sk89q.worldedit.world.block.BlockTypes;
 import net.kyori.adventure.text.Component;
@@ -153,7 +153,7 @@ public final class PlotModificationManager {
             }
         }
         // copy terrain
-        final ArrayDeque<CuboidRegion> regions = new ArrayDeque<>(this.plot.getRegions());
+        final ArrayDeque<Region> regions = new ArrayDeque<>(this.plot.getRegions());
         final Runnable run = new Runnable() {
             @Override
             public void run() {
@@ -169,7 +169,7 @@ public final class PlotModificationManager {
                     future.complete(true);
                     return;
                 }
-                CuboidRegion region = regions.poll();
+                Region region = regions.poll();
                 Location[] corners = Plot.getCorners(plot.getWorldName(), region);
                 Location pos1 = corners[0];
                 Location pos2 = corners[1];
@@ -216,7 +216,7 @@ public final class PlotModificationManager {
         if (checkRunning && this.plot.getRunning() != 0) {
             return false;
         }
-        final Set<CuboidRegion> regions = this.plot.getRegions();
+        final Set<Region> regions = this.plot.getRegions();
         final Set<Plot> plots = this.plot.getConnectedPlots();
         final ArrayDeque<Plot> queue = new ArrayDeque<>(plots);
         if (isDelete) {
@@ -228,7 +228,7 @@ public final class PlotModificationManager {
             public void run() {
                 if (queue.isEmpty()) {
                     Runnable run = () -> {
-                        for (CuboidRegion region : regions) {
+                        for (Region region : regions) {
                             Location[] corners = Plot.getCorners(plot.getWorldName(), region);
                             PlotSquared.platform().regionManager().clearAllEntities(corners[0], corners[1]);
                         }
@@ -297,7 +297,7 @@ public final class PlotModificationManager {
      * @param whenDone The task to run when finished, or null
      */
     public void setBiome(final @Nullable BiomeType biome, final @NonNull Runnable whenDone) {
-        final ArrayDeque<CuboidRegion> regions = new ArrayDeque<>(this.plot.getRegions());
+        final ArrayDeque<Region> regions = new ArrayDeque<>(this.plot.getRegions());
         final int extendBiome;
         if (this.plot.getArea() instanceof SquarePlotWorld) {
             extendBiome = (((SquarePlotWorld) this.plot.getArea()).ROAD_WIDTH > 0) ? 1 : 0;
@@ -311,7 +311,7 @@ public final class PlotModificationManager {
                     TaskManager.runTask(whenDone);
                     return;
                 }
-                CuboidRegion region = regions.poll();
+                Region region = regions.poll();
                 PlotSquared.platform().regionManager().setBiome(region, extendBiome, biome, plot.getArea(), this);
             }
         };
@@ -434,7 +434,7 @@ public final class PlotModificationManager {
      */
     public void refreshChunks() {
         final HashSet<BlockVector2> chunks = new HashSet<>();
-        for (final CuboidRegion region : this.plot.getRegions()) {
+        for (final Region region : this.plot.getRegions()) {
             for (int x = region.getMinimumPoint().getX() >> 4; x <= region.getMaximumPoint().getX() >> 4; x++) {
                 for (int z = region.getMinimumPoint().getZ() >> 4; z <= region.getMaximumPoint().getZ() >> 4; z++) {
                     if (chunks.add(BlockVector2.at(x, z))) {
@@ -709,7 +709,7 @@ public final class PlotModificationManager {
         }
         // world border
         destination.updateWorldBorder();
-        final ArrayDeque<CuboidRegion> regions = new ArrayDeque<>(this.plot.getRegions());
+        final ArrayDeque<Region> regions = new ArrayDeque<>(this.plot.getRegions());
         // move / swap data
         final PlotArea originArea = this.plot.getArea();
 
@@ -747,7 +747,7 @@ public final class PlotModificationManager {
                             // Run final tasks
                             TaskManager.runTask(whenDone);
                         } else {
-                            CuboidRegion region = regions.poll();
+                            Region region = regions.poll();
                             Location[] corners = Plot.getCorners(plot.getWorldName(), region);
                             Location pos1 = corners[0];
                             Location pos2 = corners[1];
@@ -786,7 +786,7 @@ public final class PlotModificationManager {
                             return;
                         }
                         final Runnable task = this;
-                        CuboidRegion region = regions.poll();
+                        Region region = regions.poll();
                         Location[] corners = Plot.getCorners(
                                 PlotModificationManager.this.plot.getWorldName(),
                                 region

@@ -19,25 +19,28 @@
 package com.plotsquared.core.util;
 
 import com.plotsquared.core.location.Location;
+import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 public class RegionUtil {
 
     public static @NonNull Location[] getCorners(
             final @NonNull String world,
-            final @NonNull CuboidRegion region
+            final @NonNull Region region
     ) {
         final BlockVector3 min = region.getMinimumPoint();
         final BlockVector3 max = region.getMaximumPoint();
         return new Location[]{Location.at(world, min), Location.at(world, max)};
     }
 
-    public static @NonNull Location[] getCorners(String world, Collection<CuboidRegion> regions) {
+    public static @NonNull Location[] getCorners(String world, Collection<? extends Region> regions) {
         CuboidRegion aabb = getAxisAlignedBoundingBox(regions);
         return getCorners(world, aabb);
     }
@@ -48,12 +51,12 @@ public class RegionUtil {
      * @param regions The regions the bounding box should contain.
      * @return a CuboidRegion that contains all given regions.
      */
-    public static @NonNull CuboidRegion getAxisAlignedBoundingBox(Iterable<CuboidRegion> regions) {
-        Iterator<CuboidRegion> iterator = regions.iterator();
+    public static @NonNull CuboidRegion getAxisAlignedBoundingBox(Iterable<? extends Region> regions) {
+        Iterator<? extends Region> iterator = regions.iterator();
         if (!iterator.hasNext()) {
             throw new IllegalArgumentException("No regions given");
         }
-        CuboidRegion next = iterator.next();
+        Region next = iterator.next();
         BlockVector3 min = next.getMinimumPoint();
         BlockVector3 max = next.getMaximumPoint();
 
@@ -75,6 +78,16 @@ public class RegionUtil {
         return new CuboidRegion(pos1, pos2);
     }
 
+    public static boolean contains(Region region, int x, int z) {
+        BlockVector3 min = region.getMinimumPoint();
+        BlockVector3 point = BlockVector3.at(x, min.getBlockY(), z);
+        return region.contains(point);
+    }
+
+    public static boolean contains(Region region, int x, int y, int z) {
+        return region.contains(BlockVector3.at(x, y, z));
+    }
+
     public static boolean contains(CuboidRegion region, int x, int z) {
         BlockVector3 min = region.getMinimumPoint();
         BlockVector3 max = region.getMaximumPoint();
@@ -86,6 +99,31 @@ public class RegionUtil {
         BlockVector3 max = region.getMaximumPoint();
         return x >= min.getX() && x <= max.getX() && z >= min.getZ() && z <= max.getZ() && y >= min
                 .getY() && y <= max.getY();
+    }
+
+    public static boolean intersects(Region region, Region other) {
+        if (region instanceof CuboidRegion && other instanceof CuboidRegion) {
+            return intersects((CuboidRegion) region, (CuboidRegion) other);
+        }
+        if (!intersects(region.getBoundingBox(), other.getBoundingBox())) {
+            return false;
+        }
+        for (BlockVector2 point : polygonize(region)) {
+            if (contains(other, point.getX(), point.getZ())) {
+                return true;
+            }
+        }
+        for (BlockVector2 point : polygonize(other)) {
+            if (contains(region, point.getX(), point.getZ())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static List<BlockVector2> polygonize(Region region) {
+        int maxPoints = region.getWidth() * 2 + region.getHeight() * 2;
+        return region.polygonize(maxPoints);
     }
 
     // Because WorldEdit (not FastAsyncWorldEdit) lack this for CuboidRegion

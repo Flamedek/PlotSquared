@@ -838,7 +838,7 @@ public class Area extends SubCommand {
                     center = this.worldUtil.getSpawn(area.getWorldName());
                     player.teleport(center, TeleportCause.COMMAND_AREA_TELEPORT);
                 } else {
-                    CuboidRegion region = area.getRegion();
+                    Region region = area.getRegion();
                     center = Location.at(area.getWorldName(),
                             region.getMinimumPoint().getX() + (region.getMaximumPoint().getX() - region
                                     .getMinimumPoint()

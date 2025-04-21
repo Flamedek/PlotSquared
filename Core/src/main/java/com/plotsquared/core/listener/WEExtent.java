@@ -18,15 +18,20 @@
  */
 package com.plotsquared.core.listener;
 
+import com.google.common.collect.Lists;
 import com.plotsquared.core.util.WEManager;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.entity.BaseEntity;
 import com.sk89q.worldedit.entity.Entity;
 import com.sk89q.worldedit.extent.AbstractDelegateExtent;
 import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.function.mask.Mask;
+import com.sk89q.worldedit.function.mask.Mask2D;
+import com.sk89q.worldedit.function.mask.RegionMask;
 import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.regions.RegionIntersection;
 import com.sk89q.worldedit.util.Location;
 import com.sk89q.worldedit.world.biome.BiomeType;
 import com.sk89q.worldedit.world.block.BaseBlock;
@@ -40,11 +45,17 @@ public class WEExtent extends AbstractDelegateExtent {
 
     public static BlockState AIRSTATE = BlockTypes.AIR.getDefaultState();
     public static BaseBlock AIRBASE = BlockTypes.AIR.getDefaultState().toBaseBlock();
-    private final Set<CuboidRegion> mask;
+    private final Mask mask;
+    private final Mask2D mask2D;
 
-    public WEExtent(Set<CuboidRegion> mask, Extent extent) {
+    public WEExtent(Set<Region> mask, Extent extent) {
+        this(new RegionMask(new RegionIntersection(Lists.newArrayList(mask))), extent);
+    }
+
+    public WEExtent(Mask mask, Extent extent) {
         super(extent);
         this.mask = mask;
+        this.mask2D = mask.toMask2D();
     }
 
     @SuppressWarnings("unchecked")
@@ -67,7 +78,7 @@ public class WEExtent extends AbstractDelegateExtent {
 
     @Override
     public boolean setBiome(BlockVector2 position, BiomeType biome) {
-        return WEManager.maskContains(this.mask, position.getX(), position.getZ()) && super
+        return WEManager.maskContains(this.mask2D, position.getX(), position.getZ()) && super
                 .setBiome(position, biome);
     }
 

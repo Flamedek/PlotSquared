@@ -36,7 +36,7 @@ import com.plotsquared.core.plot.world.PlotAreaManager;
 import com.plotsquared.core.plot.world.SinglePlotAreaManager;
 import com.plotsquared.core.util.EventDispatcher;
 import com.sk89q.worldedit.extension.platform.Actor;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.gamemode.GameMode;
 import com.sk89q.worldedit.world.gamemode.GameModes;
 import com.sk89q.worldedit.world.item.ItemType;
@@ -73,7 +73,7 @@ public class ConsolePlayer extends PlotPlayer<Actor> {
         }
         Location location;
         if (area != null && !(plotAreaManager instanceof SinglePlotAreaManager)) {
-            CuboidRegion region = area.getRegion();
+            Region region = area.getRegion();
             location = Location.at(area.getWorldName(),
                     region.getMinimumPoint().getX() + region.getMaximumPoint().getX() / 2, 0,
                     region.getMinimumPoint().getZ() + region.getMaximumPoint().getZ() / 2

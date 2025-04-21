@@ -34,6 +34,7 @@ import com.plotsquared.core.queue.QueueCoordinator;
 import com.plotsquared.core.util.WorldUtil;
 import com.sk89q.worldedit.function.pattern.Pattern;
 import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.biome.BiomeType;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -100,8 +101,12 @@ public class FaweRegionManager extends BukkitRegionManager {
     }
 
     @Override
-    public void setBiome(CuboidRegion region, int extendBiome, BiomeType biome, PlotArea area, Runnable whenDone) {
-        delegate.setBiome(region, extendBiome, biome, area.getWorldName(), whenDone);
+    public void setBiome(Region region, int extendBiome, BiomeType biome, PlotArea area, Runnable whenDone) {
+        if (region instanceof CuboidRegion) {
+            delegate.setBiome((CuboidRegion) region, extendBiome, biome, area.getWorldName(), whenDone);
+        } else {
+            super.setBiome(region, extendBiome, biome, area, whenDone);
+        }
     }
 
     @Override

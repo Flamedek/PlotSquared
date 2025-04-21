@@ -28,8 +28,12 @@ import com.plotsquared.core.plot.Plot;
 import com.plotsquared.core.plot.PlotArea;
 import com.plotsquared.core.plot.flag.implementations.DoneFlag;
 import com.plotsquared.core.plot.flag.implementations.NoWorldeditFlag;
+import com.sk89q.worldedit.function.mask.Mask;
+import com.sk89q.worldedit.function.mask.Mask2D;
+import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -49,6 +53,10 @@ public class WEManager {
         return false;
     }
 
+    public static boolean maskContains(Mask mask, int x, int y, int z) {
+        return mask.test(BlockVector3.at(x, y, z));
+    }
+
     public static boolean maskContains(Set<CuboidRegion> mask, int x, int z) {
         for (CuboidRegion region : mask) {
             if (RegionUtil.contains(region, x, z)) {
@@ -58,8 +66,12 @@ public class WEManager {
         return false;
     }
 
-    public static HashSet<CuboidRegion> getMask(PlotPlayer<?> player) {
-        HashSet<CuboidRegion> regions = new HashSet<>();
+    public static boolean maskContains(Mask2D mask, int x, int z) {
+        return mask.test(BlockVector2.at(x, z));
+    }
+
+    public static HashSet<Region> getMask(PlotPlayer<?> player) {
+        HashSet<Region> regions = new HashSet<>();
         UUID uuid = player.getUUID();
         Location location = player.getLocation();
         String world = location.getWorldName();
@@ -81,10 +93,11 @@ public class WEManager {
             if (plot != null && (!Settings.Done.RESTRICT_BUILDING || !DoneFlag.isDone(plot)) && (
                     (allowMember && plot.isAdded(uuid)) || (!allowMember && plot.isOwner(uuid) || plot
                             .getTrusted().contains(uuid))) && !plot.getFlag(NoWorldeditFlag.class)) {
-                for (CuboidRegion region : plot.getRegions()) {
+                for (Region region : plot.getRegions()) {
                     BlockVector3 pos1 = region.getMinimumPoint().withY(area.getMinBuildHeight());
                     BlockVector3 pos2 = region.getMaximumPoint().withY(area.getMaxBuildHeight() - 1);
                     CuboidRegion copy = new CuboidRegion(pos1, pos2);
+                    // TODO copy or wrap the actual type of region
                     regions.add(copy);
                 }
                 metaDataAccess.set(plot);

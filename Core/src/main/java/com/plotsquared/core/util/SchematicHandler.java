@@ -301,7 +301,7 @@ public abstract class SchematicHandler {
             final int HEIGHT = dimension.getY();
             final int worldHeight = plot.getArea().getMaxGenHeight() - plot.getArea().getMinGenHeight() + 1;
             // Validate dimensions
-            CuboidRegion region = plot.getLargestRegion();
+            Region region = plot.getLargestRegion();
             boolean sizeMismatch =
                     ((region.getMaximumPoint().getX() - region.getMinimumPoint().getX() + xOffset + 1) < WIDTH) || (
                             (region.getMaximumPoint().getZ() - region.getMinimumPoint().getZ() + zOffset + 1) < LENGTH) || (HEIGHT
@@ -643,7 +643,7 @@ public abstract class SchematicHandler {
      */
     public @NonNull CompletableFuture<CompoundTag> getCompoundTag(
             final @NonNull String worldName,
-            final @NonNull Set<CuboidRegion> regions
+            final @NonNull Set<? extends Region> regions
     ) {
         CompletableFuture<CompoundTag> completableFuture = new CompletableFuture<>();
         TaskManager.runTaskAsync(() -> {

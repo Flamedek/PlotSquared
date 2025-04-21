@@ -30,7 +30,7 @@ import com.plotsquared.core.plot.PlotArea;
 import com.plotsquared.core.queue.GlobalBlockQueue;
 import com.plotsquared.core.util.EventDispatcher;
 import com.plotsquared.core.util.SetupUtils;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -136,7 +136,7 @@ public class SinglePlotAreaManager extends DefaultPlotAreaManager {
     }
 
     @Override
-    public @NonNull PlotArea[] getPlotAreas(final @NonNull String world, final @NonNull CuboidRegion region) {
+    public @NonNull PlotArea[] getPlotAreas(final @NonNull String world, final @Nullable Region region) {
         PlotArea[] found = super.getPlotAreas(world, region);
         if (found != null && found.length != 0) {
             return found;

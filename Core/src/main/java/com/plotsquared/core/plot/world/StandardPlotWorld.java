@@ -21,7 +21,7 @@ package com.plotsquared.core.plot.world;
 import com.plotsquared.core.location.Location;
 import com.plotsquared.core.plot.PlotArea;
 import com.plotsquared.core.plot.PlotWorld;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -54,7 +54,7 @@ public class StandardPlotWorld extends PlotWorld {
     }
 
     @Override
-    public @NonNull Collection<PlotArea> getAreasInRegion(final @NonNull CuboidRegion region) {
+    public @NonNull Collection<PlotArea> getAreasInRegion(final @NonNull Region region) {
         return this.getAreas();
     }
 

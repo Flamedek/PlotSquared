@@ -29,8 +29,9 @@ import com.sk89q.jnbt.IntTag;
 import com.sk89q.jnbt.NBTInputStream;
 import com.sk89q.jnbt.NBTOutputStream;
 import com.sk89q.jnbt.Tag;
+import com.sk89q.worldedit.function.mask.Mask;
 import com.sk89q.worldedit.math.BlockVector2;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldedit.world.biome.BiomeType;
 import com.sk89q.worldedit.world.block.BlockState;
@@ -79,9 +80,23 @@ public abstract class WorldUtil {
      * @param biome  Biome
      * @since 6.6.0
      */
-    public static void setBiome(String world, final CuboidRegion region, BiomeType biome) {
+    public static void setBiome(String world, final Region region, BiomeType biome) {
         PlotSquared.platform().worldUtil().setBiomes(world, region, biome);
     }
+
+    /**
+     * Set the biome in a region
+     *
+     * @param world  World name
+     * @param region Region
+     * @param biome  Biome
+     * @param mask  Mask
+     * @since next-release
+     */
+    public static void setBiome(String world, final Region region, BiomeType biome, Mask mask) {
+        PlotSquared.platform().worldUtil().setBiomes(world, region, biome, mask);
+    }
+
 
     /**
      * Check if a given world name corresponds to a real world
@@ -225,9 +240,25 @@ public abstract class WorldUtil {
      * @param region    Region
      * @param biome     New biome
      */
-    public void setBiomes(@NonNull String worldName, @NonNull CuboidRegion region, @NonNull BiomeType biome) {
+    public void setBiomes(@NonNull String worldName, @NonNull Region region, @NonNull BiomeType biome) {
         final World world = getWeWorld(worldName);
         region.forEach(bv -> world.setBiome(bv, biome));
+    }
+
+    /**
+     * Set the biome in a region
+     *
+     * @param worldName World name
+     * @param region    Region
+     * @param biome     New biome
+     */
+    public void setBiomes(@NonNull String worldName, @NonNull Region region, @NonNull BiomeType biome, @NonNull Mask mask) {
+        final World world = getWeWorld(worldName);
+        region.forEach(bv -> {
+            if (mask.test(bv)) {
+                world.setBiome(bv, biome);
+            }
+        });
     }
 
     /**

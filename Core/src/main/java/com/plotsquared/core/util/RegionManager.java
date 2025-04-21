@@ -33,6 +33,7 @@ import com.plotsquared.core.queue.GlobalBlockQueue;
 import com.plotsquared.core.queue.QueueCoordinator;
 import com.plotsquared.core.util.task.TaskManager;
 import com.sk89q.worldedit.entity.Entity;
+import com.sk89q.worldedit.function.mask.RegionMask;
 import com.sk89q.worldedit.function.pattern.Pattern;
 import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
@@ -384,7 +385,7 @@ public abstract class RegionManager {
      * @since 6.6.0
      */
     public void setBiome(
-            final CuboidRegion region,
+            final Region region,
             final int extendBiome,
             final BiomeType biome,
             final PlotArea area,
@@ -394,6 +395,7 @@ public abstract class RegionManager {
         queue.addReadChunks(region.getChunks());
         final BlockVector3 regionMin = region.getMinimumPoint();
         final BlockVector3 regionMax = region.getMaximumPoint();
+        final RegionMask mask = new RegionMask(region);
         queue.setChunkConsumer(chunkPos -> {
             BlockVector3 chunkMin = BlockVector3.at(
                     Math.max(chunkPos.getX() << 4, regionMin.getBlockX()),
@@ -406,10 +408,13 @@ public abstract class RegionManager {
                     Math.min((chunkPos.getZ() << 4) + 15, regionMax.getBlockZ())
             );
             CuboidRegion chunkRegion = new CuboidRegion(region.getWorld(), chunkMin, chunkMax);
+            // TODO: if [region] contains the whole [chunkRegion], don't pass the RegionMask
+
             WorldUtil.setBiome(
                     area.getWorldName(),
                     chunkRegion,
-                    biome
+                    biome,
+                    mask
             );
             worldUtil.refreshChunk(chunkPos.getBlockX(), chunkPos.getBlockZ(), area.getWorldName());
         });

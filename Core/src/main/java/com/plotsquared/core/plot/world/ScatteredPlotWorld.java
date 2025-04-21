@@ -24,7 +24,7 @@ import com.plotsquared.core.plot.PlotWorld;
 import com.plotsquared.core.util.PlotAreaConverter;
 import com.plotsquared.core.util.RegionUtil;
 import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.khelekore.prtree.MBR;
@@ -90,7 +90,7 @@ public class ScatteredPlotWorld extends PlotWorld {
     }
 
     @Override
-    public @NonNull Collection<PlotArea> getAreasInRegion(final @NonNull CuboidRegion region) {
+    public @NonNull Collection<PlotArea> getAreasInRegion(final @NonNull Region region) {
         if (this.areas.isEmpty()) {
             return Collections.emptyList();
         }
