@@ -230,8 +230,7 @@ public class Merge extends SubCommand {
             return true;
         }
         Plot adjacent = plot.getRelative(direction);
-        if (adjacent == null || !adjacent.hasOwner() || adjacent
-                .isMerged((direction.getIndex() + 2) % 4) || (!force && adjacent.isOwner(uuid))) {
+        if (adjacent == null || !adjacent.hasOwner() || adjacent.isMerged(direction.opposite()) || (!force && adjacent.isOwner(uuid))) {
             player.sendMessage(TranslatableCaption.of("merge.no_available_automerge"));
             return false;
         }
