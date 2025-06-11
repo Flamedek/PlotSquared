@@ -18,21 +18,17 @@
  */
 package com.plotsquared.core.location;
 
+import com.sk89q.worldedit.math.Vector3;
+
 public enum Direction {
     ALL(-1, "all"),
     NORTH(0, "north"),
     EAST(1, "east"),
     SOUTH(2, "south"),
-    WEST(
-            3,
-            "west"
-    ),
+    WEST(3, "west"),
     NORTHEAST(4, "northeast"),
     SOUTHEAST(5, "southeast"),
-    SOUTHWEST(
-            6,
-            "southwest"
-    ),
+    SOUTHWEST(6, "southwest"),
     NORTHWEST(7, "northwest"),
     ;
 
@@ -41,7 +37,6 @@ public enum Direction {
     private final String name;
 
     Direction(int index, String name) {
-
         this.index = index;
         this.name = name;
     }
@@ -72,6 +67,10 @@ public enum Direction {
             case SOUTHWEST -> NORTHEAST;
             case NORTHWEST -> SOUTHEAST;
         };
+    }
+
+    public Vector3 toVector() {
+        return com.sk89q.worldedit.util.Direction.valueOf(name()).toVector();
     }
 
     public int getIndex() {

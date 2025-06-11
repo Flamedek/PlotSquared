@@ -84,6 +84,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
@@ -121,9 +122,11 @@ public class Plot {
     private static final DecimalFormat FLAG_DECIMAL_FORMAT = new DecimalFormat("0");
     private static final MiniMessage MINI_MESSAGE = MiniMessage.builder().build();
     private static final Cleaner CLEANER = Cleaner.create();
+    private static final List<Direction> DIRECTIONS;
 
     static {
         FLAG_DECIMAL_FORMAT.setMaximumFractionDigits(340);
+        DIRECTIONS = Arrays.asList(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
     }
 
     /**
@@ -2282,6 +2285,14 @@ public class Plot {
      */
     public @Nullable Plot getRelative(@NonNull Direction direction) {
         return this.area.getPlotAbs(this.id.getRelative(direction));
+    }
+
+    /**
+     * Gets the directions where this plot may connect to other plots
+     * @return possible connection directions
+     */
+    public @NonNull List<Direction> getRelativeDirections() {
+        return DIRECTIONS;
     }
 
     /**

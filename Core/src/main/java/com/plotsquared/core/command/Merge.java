@@ -34,11 +34,13 @@ import com.plotsquared.core.util.EconHandler;
 import com.plotsquared.core.util.EventDispatcher;
 import com.plotsquared.core.util.PlotExpression;
 import com.plotsquared.core.util.StringMan;
+import com.sk89q.worldedit.math.Vector3;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import java.util.List;
 import java.util.UUID;
 
 @CommandDeclaration(command = "merge",
@@ -65,6 +67,7 @@ public class Merge extends SubCommand {
         this.econHandler = econHandler;
     }
 
+    @Deprecated(forRemoval = true)
     public static String direction(float yaw) {
         yaw = yaw / 90;
         int i = Math.round(yaw);
@@ -75,6 +78,19 @@ public class Merge extends SubCommand {
             case -3, 1 -> "WEST";
             default -> "";
         };
+    }
+
+    protected Direction findClosest(List<Direction> directions, Vector3 dir) {
+        Direction closest = null;
+        double closestDot = -2;
+        for (Direction direction : directions) {
+            double dot = direction.toVector().dot(dir);
+            if (dot >= closestDot) {
+                closest = direction;
+                closestDot = dot;
+            }
+        }
+        return closest;
     }
 
     @Override
@@ -93,18 +109,18 @@ public class Merge extends SubCommand {
             player.sendMessage(TranslatableCaption.of("schematics.schematic_too_large"));
             return false;
         }
+        List<Direction> mergeDirections = plot.getRelativeDirections();
         Direction direction = null;
         if (args.length == 0) {
-            switch (direction(player.getLocationFull().getYaw())) {
-                case "NORTH" -> direction = Direction.NORTH;
-                case "EAST" -> direction = Direction.EAST;
-                case "SOUTH" -> direction = Direction.SOUTH;
-                case "WEST" -> direction = Direction.WEST;
-            }
+            Vector3 lookDir = player.getLocationFull().getDirection();
+            direction = findClosest(mergeDirections, lookDir);
         } else {
             for (int i = 0; i < values.length; i++) {
                 if (args[0].equalsIgnoreCase(values[i]) || args[0].equalsIgnoreCase(aliases[i])) {
-                    direction = Direction.getFromIndex(i);
+                    Direction value = Direction.getFromIndex(i);
+                    if (mergeDirections.contains(value)) {
+                        direction = value;
+                    }
                     break;
                 }
             }
