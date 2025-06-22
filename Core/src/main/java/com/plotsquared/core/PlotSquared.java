@@ -104,6 +104,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -143,6 +144,7 @@ public class PlotSquared {
     private YamlConfiguration config;
     // Platform / Version / Update URL
     private PlotVersion version;
+    private Properties pluginProperties;
     // Files and configuration
     private File jarFile = null; // This file
     private File storageFile;
@@ -322,6 +324,19 @@ public class PlotSquared {
     ) {
         return version[0] > version2[0] || version[0] == version2[0] && version[1] > version2[1]
                 || version[0] == version2[0] && version[1] == version2[1] && version[2] >= version2[2];
+    }
+
+    @NonNull
+    public String getPluginProperty(@NonNull String key) {
+        return pluginProperties.getProperty(key, "");
+    }
+
+    public boolean getPluginFlag(@NonNull String key) {
+        return Boolean.parseBoolean(getPluginProperty(key));
+    }
+
+    public String getPluginFlavor() {
+        return pluginProperties.getProperty("flavor", "PlotSquared");
     }
 
     /**
@@ -1357,23 +1372,27 @@ public class PlotSquared {
                         worldConfiguration.save(worldsFile);
                     } catch (IOException e) {
                         LOGGER.error("Failed to save worlds.yml", e);
-                        e.printStackTrace();
                     }
                 }
                 Settings.save(configFile);
             }
         }
         Settings.load(configFile);
-        //Sets the version information for the settings.yml file
+
+
         try (InputStream stream = getClass().getResourceAsStream("/plugin.properties")) {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(stream))) {
-                String versionString = br.readLine();
-                String commitString = br.readLine();
-                String dateString = br.readLine();
-                this.version = PlotVersion.tryParse(versionString, commitString, dateString);
-            }
-        } catch (IOException throwable) {
-            throwable.printStackTrace();
+            Properties properties = new Properties();
+            properties.load(stream);
+
+            this.pluginProperties = properties;
+            this.version = PlotVersion.tryParse(
+                properties.getProperty("version"),
+                properties.getProperty("commit"),
+                properties.getProperty("date")
+            );
+        } catch (Exception e) {
+            LOGGER.error("Invalid build, unknown plugin version", e);
+            pluginProperties = new Properties();
         }
         Settings.save(configFile);
         config = YamlConfiguration.loadConfiguration(configFile);
