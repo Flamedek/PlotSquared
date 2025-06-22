@@ -137,7 +137,7 @@ public class Plot {
     /**
      * Utility used to modify the plot
      */
-    private final PlotModificationManager plotModificationManager = new PlotModificationManager(this);
+    private final PlotModificationManager plotModificationManager = new SquarePlotModificationManager(this);
     /**
      * Represents whatever the database manager needs it to: <br>
      * - A value of -1 usually indicates the plot will not be stored in the DB<br>
