@@ -1381,6 +1381,9 @@ public class PlotSquared {
                 properties.getProperty("commit"),
                 properties.getProperty("date")
             );
+            if (!this.flavor.equals("PlotSquared")) {
+                LOGGER.info("Current plugin flavor {}", this.flavor);
+            }
         } catch (Exception e) {
             LOGGER.error("Invalid build, unknown plugin version", e);
         }
