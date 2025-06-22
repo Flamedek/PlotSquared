@@ -18,9 +18,11 @@
  */
 package com.plotsquared.core.command;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.plotsquared.core.PlotSquared;
 import com.plotsquared.core.configuration.Settings;
+import com.plotsquared.core.configuration.caption.Caption;
 import com.plotsquared.core.configuration.caption.TranslatableCaption;
 import com.plotsquared.core.events.PlotMergeEvent;
 import com.plotsquared.core.events.Result;
@@ -33,11 +35,12 @@ import com.plotsquared.core.plot.PlotArea;
 import com.plotsquared.core.util.EconHandler;
 import com.plotsquared.core.util.EventDispatcher;
 import com.plotsquared.core.util.PlotExpression;
-import com.plotsquared.core.util.StringMan;
 import com.sk89q.worldedit.math.Vector3;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.List;
@@ -46,15 +49,13 @@ import java.util.UUID;
 @CommandDeclaration(command = "merge",
         aliases = "m",
         permission = "plots.merge",
-        usage = "/plot merge <all | n | e | s | w> [removeroads]",
+        usage = "/plot merge <forward | auto | <direction>> [removeroads]",
         category = CommandCategory.SETTINGS,
         requiredType = RequiredType.NONE,
         confirmation = true)
 public class Merge extends SubCommand {
 
-    public static final String[] values = new String[]{"north", "east", "south", "west"};
-    public static final String[] aliases = new String[]{"n", "e", "s", "w"};
-
+    private static final Logger log = LogManager.getLogger(Merge.class);
     private final EventDispatcher eventDispatcher;
     private final EconHandler econHandler;
 
@@ -80,7 +81,8 @@ public class Merge extends SubCommand {
         };
     }
 
-    protected Direction findClosest(List<Direction> directions, Vector3 dir) {
+    protected Direction findForward(List<Direction> directions, Location location) {
+        Vector3 dir = location.getDirection();
         Direction closest = null;
         double closestDot = -2;
         for (Direction direction : directions) {
@@ -92,6 +94,9 @@ public class Merge extends SubCommand {
         }
         return closest;
     }
+
+    private static final String ACTION_MERGE_FORWARD = "forward";
+    private static final String ACTION_MERGE_AUTO = "auto";
 
     @Override
     public boolean onCommand(final PlotPlayer<?> player, String[] args) {
@@ -109,43 +114,62 @@ public class Merge extends SubCommand {
             player.sendMessage(TranslatableCaption.of("schematics.schematic_too_large"));
             return false;
         }
-        List<Direction> mergeDirections = plot.getRelativeDirections();
-        Direction direction = null;
-        if (args.length == 0) {
-            Vector3 lookDir = player.getLocationFull().getDirection();
-            direction = findClosest(mergeDirections, lookDir);
-        } else {
-            for (int i = 0; i < values.length; i++) {
-                if (args[0].equalsIgnoreCase(values[i]) || args[0].equalsIgnoreCase(aliases[i])) {
-                    Direction value = Direction.getFromIndex(i);
-                    if (mergeDirections.contains(value)) {
-                        direction = value;
-                    }
-                    break;
-                }
-            }
-            if (direction == null && (args[0].equalsIgnoreCase("all") || args[0]
-                    .equalsIgnoreCase("auto")) && player.hasPermission(Permission.PERMISSION_MERGE_ALL)) {
-                direction = Direction.ALL;
-            }
+        List<Direction> options = Lists.newArrayList();
+        if (player.hasPermission(Permission.PERMISSION_MERGE_ALL)) {
+            options.add(Direction.ALL);
         }
-        if (direction == null) {
+        options.addAll(plot.getRelativeDirections());
+
+        Direction direction;
+        String input = args.length != 0 ? args[0].toLowerCase() : ACTION_MERGE_FORWARD;
+        if (ACTION_MERGE_FORWARD.equals(input) || ACTION_MERGE_FORWARD.substring(0, 1).equals(input)) {
+            direction = findForward(options, player.getLocationFull());
+        } else if (ACTION_MERGE_AUTO.equals(input) || ACTION_MERGE_AUTO.substring(0, 1).equals(input)) {
+            direction = Direction.ALL;
+        } else {
+            direction = Direction.parseString(input);
+        }
+
+        if (direction == Direction.ALL && !player.hasPermission(Permission.PERMISSION_MERGE_ALL)) {
             player.sendMessage(
-                    TranslatableCaption.of("commandconfig.command_syntax"),
-                    TagResolver.resolver("value", Tag.inserting(Component.text(
-                            "/plot merge <" + StringMan.join(values, " | ") + "> [removeroads]"
-                    )))
-            );
-            player.sendMessage(
-                    TranslatableCaption.of("help.direction"),
-                    TagResolver.resolver("dir", Tag.inserting(Component.text(direction(location.getYaw()))))
+                    TranslatableCaption.of("permission.no_permission"),
+                    TagResolver.resolver("node", Tag.inserting(Permission.PERMISSION_MERGE_ALL.asComponent()))
             );
             return false;
         }
+        if (!options.contains(direction)) {
+            List<String> aliases = Lists.newArrayListWithCapacity(options.size());
+            for (Direction option : options) {
+                if (option == Direction.ALL) {
+                    aliases.add(option.getName());
+                } else {
+                    aliases.add(option.getAlias());
+                }
+            }
+            aliases.add(ACTION_MERGE_FORWARD);
+
+            player.sendMessage(
+                    TranslatableCaption.of("invalid.not_valid_block"),
+                    TagResolver.resolver("value", Tag.inserting(
+                            TranslatableCaption.of("flags.flag_error_enum").toComponent(
+                                    player,
+                                    TagResolver.resolver("list", Tag.inserting(
+                                            Component.text(String.join(", ", aliases))
+                                    ))
+                            )
+                    ))
+            );
+            direction = findForward(options, player.getLocationFull());
+            player.sendMessage(
+                    TranslatableCaption.of("help.direction"),
+                    TagResolver.resolver("dir", Tag.inserting(Component.text(direction.getName())))
+            );
+            return false;
+        }
+
         final int size = plot.getConnectedPlots().size();
         int max = player.hasPermissionRange("plots.merge", Settings.Limit.MAX_PLOTS);
-        PlotMergeEvent event =
-                this.eventDispatcher.callMerge(plot, direction, max, player);
+        PlotMergeEvent event = this.eventDispatcher.callMerge(plot, direction, max, player);
         if (event.getEventResult() == Result.DENY) {
             player.sendMessage(
                     TranslatableCaption.of("events.event_denied"),
@@ -154,8 +178,15 @@ public class Merge extends SubCommand {
             return false;
         }
         boolean force = event.getEventResult() == Result.FORCE;
-        direction = event.getDir();
         final int maxSize = event.getMax();
+        direction = event.getDir();
+
+        checkTrue(force || options.contains(direction),
+                TranslatableCaption.of("events.event_denied"),
+                TagResolver.resolver("value", Tag.inserting(
+                        Component.text("Invalid direction " + direction.getName())
+                ))
+        );
 
         if (!force && size - 1 > maxSize) {
             player.sendMessage(
@@ -178,12 +209,11 @@ public class Merge extends SubCommand {
                 uuid = plot.getOwnerAbs();
             }
         }
+
+        boolean removeRoads = args.length < 2 || ("true".equalsIgnoreCase(args[1]) || "t".equalsIgnoreCase(args[1]));
+
         if (direction == Direction.ALL) {
-            boolean terrain = true;
-            if (args.length == 2) {
-                terrain = "true".equalsIgnoreCase(args[1]);
-            }
-            if (!force && !terrain && !player.hasPermission(Permission.PERMISSION_MERGE_KEEP_ROAD)) {
+            if (!force && !removeRoads && !player.hasPermission(Permission.PERMISSION_MERGE_KEEP_ROAD)) {
                 player.sendMessage(
                         TranslatableCaption.of("permission.no_permission"),
                         TagResolver.resolver(
@@ -193,7 +223,7 @@ public class Merge extends SubCommand {
                 );
                 return true;
             }
-            if (plot.getPlotModificationManager().autoMerge(Direction.ALL, maxSize, uuid, player, terrain)) {
+            if (plot.getPlotModificationManager().autoMerge(Direction.ALL, maxSize, uuid, player, removeRoads)) {
                 if (this.econHandler.isEnabled(plotArea) && !player.hasPermission(Permission.PERMISSION_ADMIN_BYPASS_ECON) && price > 0d) {
                     this.econHandler.withdrawMoney(player, price);
                     player.sendMessage(
@@ -220,20 +250,15 @@ public class Merge extends SubCommand {
             );
             return false;
         }
-        final boolean terrain;
-        if (args.length == 2) {
-            terrain = "true".equalsIgnoreCase(args[1]);
-        } else {
-            terrain = true;
-        }
-        if (!force && !terrain && !player.hasPermission(Permission.PERMISSION_MERGE_KEEP_ROAD)) {
+
+        if (!force && !removeRoads && !player.hasPermission(Permission.PERMISSION_MERGE_KEEP_ROAD)) {
             player.sendMessage(
                     TranslatableCaption.of("permission.no_permission"),
                     TagResolver.resolver("node", Tag.inserting(Permission.PERMISSION_MERGE_KEEP_ROAD))
             );
             return true;
         }
-        if (plot.getPlotModificationManager().autoMerge(direction, maxSize - size, uuid, player, terrain)) {
+        if (plot.getPlotModificationManager().autoMerge(direction, maxSize - size, uuid, player, removeRoads)) {
             if (this.econHandler.isEnabled(plotArea) && !player.hasPermission(Permission.PERMISSION_ADMIN_BYPASS_ECON) && price > 0d) {
                 this.econHandler.withdrawMoney(player, price);
                 player.sendMessage(
@@ -268,7 +293,7 @@ public class Merge extends SubCommand {
             final Direction dir = direction;
             Runnable run = () -> {
                 accepter.sendMessage(TranslatableCaption.of("merge.merge_accepted"));
-                plot.getPlotModificationManager().autoMerge(dir, maxSize - size, owner, player, terrain);
+                plot.getPlotModificationManager().autoMerge(dir, maxSize - size, owner, player, removeRoads);
                 PlotPlayer<?> plotPlayer = PlotSquared.platform().playerManager().getPlayerIfExists(player.getUUID());
                 if (plotPlayer == null) {
                     accepter.sendMessage(TranslatableCaption.of("merge.merge_not_valid"));
@@ -316,7 +341,7 @@ public class Merge extends SubCommand {
                         maxSize - size,
                         uuids.iterator().next(),
                         player,
-                        terrain
+                        removeRoads
                 )) {
                     if (this.econHandler.isEnabled(plotArea) && !player.hasPermission(Permission.PERMISSION_ADMIN_BYPASS_ECON) && price > 0d) {
                         if (!force && this.econHandler.getMoney(player) < price) {
