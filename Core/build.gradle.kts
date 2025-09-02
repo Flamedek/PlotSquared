@@ -51,7 +51,8 @@ tasks.processResources {
         expand(
                 "version" to project.version.toString(),
                 "commit" to rootProject.grgit.head().abbreviatedId,
-                "date" to rootProject.grgit.head().dateTime.format(DateTimeFormatter.ofPattern("yy.MM.dd"))
+                "date" to rootProject.grgit.head().dateTime.format(DateTimeFormatter.ofPattern("yy.MM.dd")),
+                "flavor" to (findProperty("com.plotsquared.flavor") ?: "PlotSquared"),
         )
     }
 

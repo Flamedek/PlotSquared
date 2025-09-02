@@ -75,13 +75,11 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URI;
@@ -104,6 +102,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -143,6 +142,7 @@ public class PlotSquared {
     private YamlConfiguration config;
     // Platform / Version / Update URL
     private PlotVersion version;
+    private String flavor;
     // Files and configuration
     private File jarFile = null; // This file
     private File storageFile;
@@ -331,6 +331,10 @@ public class PlotSquared {
      */
     public @NonNull PlotVersion getVersion() {
         return this.version;
+    }
+
+    public @NonNull String getPluginFlavor() {
+        return flavor;
     }
 
     /**
@@ -1357,23 +1361,29 @@ public class PlotSquared {
                         worldConfiguration.save(worldsFile);
                     } catch (IOException e) {
                         LOGGER.error("Failed to save worlds.yml", e);
-                        e.printStackTrace();
                     }
                 }
                 Settings.save(configFile);
             }
         }
         Settings.load(configFile);
-        //Sets the version information for the settings.yml file
+
+
         try (InputStream stream = getClass().getResourceAsStream("/plugin.properties")) {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(stream))) {
-                String versionString = br.readLine();
-                String commitString = br.readLine();
-                String dateString = br.readLine();
-                this.version = PlotVersion.tryParse(versionString, commitString, dateString);
+            Properties properties = new Properties();
+            properties.load(stream);
+
+            this.flavor = properties.getProperty("flavor", "PlotSquared");
+            this.version = PlotVersion.tryParse(
+                properties.getProperty("version"),
+                properties.getProperty("commit"),
+                properties.getProperty("date")
+            );
+            if (!this.flavor.equals("PlotSquared")) {
+                LOGGER.info("Current plugin flavor {}", this.flavor);
             }
-        } catch (IOException throwable) {
-            throwable.printStackTrace();
+        } catch (Exception e) {
+            LOGGER.error("Invalid build, unknown plugin version", e);
         }
         Settings.save(configFile);
         config = YamlConfiguration.loadConfiguration(configFile);
