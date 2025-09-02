@@ -354,7 +354,19 @@ public final class Backup extends Command {
                         LOGGER.error("Error loading player ({}) backup", player.getName(), throwable);
                         return;
                     }
-                        if (number < 1 || number > backups.size()) {
+                    if (number < 1 || number > backups.size()) {
+                        player.sendMessage(
+                                TranslatableCaption.of("backups.backup_impossible"),
+                                TagResolver.resolver(
+                                        "plot",
+                                        Tag.inserting(TranslatableCaption
+                                                .of("generic.generic_invalid_choice")
+                                                .toComponent(player))
+                                )
+                        );
+                    } else {
+                        final com.plotsquared.core.backup.Backup backup = backups.get(number - 1);
+                        if (backup == null || backup.getFile() == null || !Files.exists(backup.getFile())) {
                             player.sendMessage(
                                     TranslatableCaption.of("backups.backup_impossible"),
                                     TagResolver.resolver(
@@ -365,32 +377,17 @@ public final class Backup extends Command {
                                     )
                             );
                         } else {
-                            final com.plotsquared.core.backup.Backup backup =
-                                    backups.get(number - 1);
-                            if (backup == null || backup.getFile() == null || !Files
-                                    .exists(backup.getFile())) {
-                                player.sendMessage(
-                                        TranslatableCaption.of("backups.backup_impossible"),
-                                        TagResolver.resolver(
-                                                "plot",
-                                                Tag.inserting(TranslatableCaption
-                                                        .of("generic.generic_invalid_choice")
-                                                        .toComponent(player))
-                                        )
-                                );
-                            } else {
-                                CmdConfirm.addPending(player, "/plot backup load " + number,
-                                        () -> backupProfile.restoreBackup(backup, player)
-                                                .whenComplete((n, error) -> {
-                                                    if (error != null) {
-                                                        player.sendMessage(
-                                                                TranslatableCaption.of("backups.backup_load_failure"),
-                                                                TagResolver.resolver(Placeholder.parsed("reason", error.getMessage()))
-                                                    );
-                                                } else {
-                                                    player.sendMessage(TranslatableCaption.of("backups.backup_load_success"));
-                                                }
-                                            })
+                            CmdConfirm.addPending(player, "/plot backup load " + number, () ->
+                                backupProfile.restoreBackup(backup, player).whenComplete((n, error) -> {
+                                    if (error != null) {
+                                        player.sendMessage(
+                                                TranslatableCaption.of("backups.backup_load_failure"),
+                                                TagResolver.resolver(Placeholder.parsed("reason", error.getMessage()))
+                                        );
+                                    } else {
+                                        player.sendMessage(TranslatableCaption.of("backups.backup_load_success"));
+                                    }
+                                })
                             );
                         }
                     }
