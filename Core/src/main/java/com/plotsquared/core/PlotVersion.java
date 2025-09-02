@@ -18,14 +18,19 @@
  */
 package com.plotsquared.core;
 
+import com.google.common.base.Strings;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class PlotVersion {
+
+    private static final String DEFAULT_FLAVOR = "PlotSquared";
 
     public final int year, month, day, hash;
     public final String versionString;
     public final int[] version;
     public final String suffix;
+    public final String flavor;
 
     public PlotVersion(
             final int year,
@@ -34,6 +39,23 @@ public final class PlotVersion {
             final int hash,
             final String rawVersion
     ) {
+        this(year, month, day, hash, rawVersion, DEFAULT_FLAVOR);
+    }
+
+    public PlotVersion(
+            final int year,
+            final int month,
+            final int day,
+            final int hash,
+            final String rawVersion,
+            final String flavor
+    ) {
+        if (Strings.isNullOrEmpty(flavor)) {
+            this.flavor = DEFAULT_FLAVOR;
+        } else {
+            this.flavor = flavor;
+        }
+        String flavorSuffix = DEFAULT_FLAVOR.equals(this.flavor) ? "" : "-" + this.flavor;
         String versionString = rawVersion;
         this.year = year;
         this.month = month;
@@ -41,11 +63,12 @@ public final class PlotVersion {
         this.hash = hash;
         int dash = versionString.indexOf('-');
         if (dash != -1) {
-            suffix = versionString.substring(dash);
+            suffix = versionString.substring(dash) + flavorSuffix;
             versionString = versionString.substring(0, dash);
         } else {
-            suffix = "";
+            suffix = flavorSuffix;
         }
+
         this.versionString = versionString.substring(versionString.indexOf('=') + 1);
         version = new int[3];
         String[] verArray = versionString.substring(versionString.indexOf('=') + 1).split("\\.");
@@ -57,15 +80,22 @@ public final class PlotVersion {
     public PlotVersion(
             final String rawVersion,
             final String commit,
-            final String date
+            final String date,
+            final String flavor
     ) {
+        if (Strings.isNullOrEmpty(flavor)) {
+            this.flavor = DEFAULT_FLAVOR;
+        } else {
+            this.flavor = flavor;
+        }
+        String flavorSuffix = DEFAULT_FLAVOR.equals(this.flavor) ? "" : "-" + this.flavor;
         String versionString = rawVersion;
         int dash = versionString.indexOf('-');
         if (dash != -1) {
-            suffix = versionString.substring(dash);
+            suffix = versionString.substring(dash) + flavorSuffix;
             versionString = versionString.substring(0, dash);
         } else {
-            suffix = "";
+            suffix = flavorSuffix;
         }
         this.versionString = versionString.substring(versionString.indexOf('=') + 1);
         version = new int[3];
@@ -84,10 +114,11 @@ public final class PlotVersion {
     public static @NonNull PlotVersion tryParse(
             final @NonNull String versionString,
             final @NonNull String commit,
-            final @NonNull String date
+            final @NonNull String date,
+            final @Nullable String flavor
     ) {
         try {
-            return new PlotVersion(versionString, commit, date);
+            return new PlotVersion(versionString, commit, date, flavor);
         } catch (Exception e) {
             e.printStackTrace();
             return new PlotVersion(0, 0, 0, 0, "0");
@@ -109,6 +140,16 @@ public final class PlotVersion {
         } else {
             return "PlotSquared-" + versionString + suffix;
         }
+    }
+
+    /**
+     * Some forks of the project may mark their builds with a specific 'flavor' tag.
+     * This may be used to check for the availability of certain capabilities added by such forks.
+     *
+     * @return true if this is build from the official original repository.
+     */
+    public boolean isOfficialBuild() {
+        return this.flavor == null || this.flavor.isEmpty() || this.flavor.equals(DEFAULT_FLAVOR);
     }
 
     /**

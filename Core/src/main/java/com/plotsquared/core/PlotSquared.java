@@ -142,7 +142,6 @@ public class PlotSquared {
     private YamlConfiguration config;
     // Platform / Version / Update URL
     private PlotVersion version;
-    private String flavor;
     // Files and configuration
     private File jarFile = null; // This file
     private File storageFile;
@@ -331,10 +330,6 @@ public class PlotSquared {
      */
     public @NonNull PlotVersion getVersion() {
         return this.version;
-    }
-
-    public @NonNull String getPluginFlavor() {
-        return flavor;
     }
 
     /**
@@ -1373,14 +1368,14 @@ public class PlotSquared {
             Properties properties = new Properties();
             properties.load(stream);
 
-            this.flavor = properties.getProperty("flavor", "PlotSquared");
             this.version = PlotVersion.tryParse(
                 properties.getProperty("version"),
                 properties.getProperty("commit"),
-                properties.getProperty("date")
+                properties.getProperty("date"),
+                properties.getProperty("flavor")
             );
-            if (!this.flavor.equals("PlotSquared")) {
-                LOGGER.info("Current plugin flavor {}", this.flavor);
+            if (!this.version.isOfficialBuild()) {
+                LOGGER.info("Current plugin flavor: {}", this.version.flavor);
             }
         } catch (Exception e) {
             LOGGER.error("Invalid build, unknown plugin version", e);
