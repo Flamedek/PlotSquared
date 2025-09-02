@@ -31,6 +31,7 @@ import com.plotsquared.core.util.task.RunnableVal2;
 import com.plotsquared.core.util.task.RunnableVal3;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -370,10 +371,7 @@ public final class Backup extends Command {
                                                     if (error != null) {
                                                         player.sendMessage(
                                                                 TranslatableCaption.of("backups.backup_load_failure"),
-                                                                TagResolver.resolver(
-                                                                        "reason",
-                                                                        Tag.inserting(Component.text(error.getMessage()))
-                                                                )
+                                                                TagResolver.resolver(Placeholder.parsed("reason", error.getMessage()))
                                                         );
                                                     } else {
                                                         player.sendMessage(TranslatableCaption.of("backups.backup_load_success"));

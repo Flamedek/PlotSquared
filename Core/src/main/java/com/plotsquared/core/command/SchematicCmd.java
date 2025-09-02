@@ -97,7 +97,7 @@ public class SchematicCmd extends SubCommand {
                             TranslatableCaption.of("commandconfig.command_syntax"),
                             TagResolver.resolver(
                                     "value",
-                                    Tag.inserting(Component.text("Possible values: save, paste, exportall, list"))
+                                    Tag.inserting(Component.text("/plot schematic paste <name>"))
                             )
                     );
                     break;
@@ -266,7 +266,13 @@ public class SchematicCmd extends SubCommand {
                     return false;
                 }
                 ArrayList<Plot> plots = Lists.newArrayList(plot);
-                boolean result = this.schematicHandler.exportAll(plots, null, null, () -> {
+                String namingScheme = null;
+                if (args.length > 1) {
+                    namingScheme = args[1];
+                }
+                // TODO Check if the output file exists to avoid accidentally deleting previous versions.
+                //    Require `/p confirm` to overwrite the file, or bypass this based on settings and permissions
+                boolean result = this.schematicHandler.exportAll(plots, null, namingScheme, () -> {
                     player.sendMessage(TranslatableCaption.of("schematics.schematic_exportall_single_finished"));
                     SchematicCmd.this.running = false;
                 });
