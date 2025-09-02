@@ -295,10 +295,10 @@ public abstract class SchematicHandler {
             return;
         }
         try {
-            BlockVector3 dimension = schematic.getClipboard().getDimensions();
-            final int WIDTH = dimension.getX();
-            final int LENGTH = dimension.getZ();
-            final int HEIGHT = dimension.getY();
+            Clipboard clipboard = schematic.getClipboard();
+            final int WIDTH = clipboard.getDimensions().getX();
+            final int LENGTH = clipboard.getDimensions().getZ();
+            final int HEIGHT = clipboard.getDimensions().getY();
             final int worldHeight = plot.getArea().getMaxGenHeight() - plot.getArea().getMinGenHeight() + 1;
             // Validate dimensions
             CuboidRegion region = plot.getLargestRegion();
@@ -332,12 +332,12 @@ public abstract class SchematicHandler {
             } else {
                 y_offset_actual = yOffset;
             }
-
             final int p1x;
             final int p1z;
             final int p2x;
             final int p2z;
             final Region allRegion;
+
             if (!sizeMismatch || plot.getRegions().size() == 1) {
                 p1x = region.getMinimumPoint().getX() + xOffset;
                 p1z = region.getMinimumPoint().getZ() + zOffset;
@@ -345,11 +345,18 @@ public abstract class SchematicHandler {
                 p2z = region.getMaximumPoint().getZ() + zOffset;
                 allRegion = region;
             } else {
-                Location[] corners = plot.getCorners();
-                p1x = corners[0].getX() + xOffset;
-                p1z = corners[0].getZ() + zOffset;
-                p2x = corners[1].getX() + xOffset;
-                p2z = corners[1].getZ() + zOffset;
+                // Calculate final position centered in the plot
+                Location bottom = plot.getBottomAbs();
+                Location top = plot.getTopAbs();
+                int plotWidth = top.getX() - bottom.getX();
+                int plotLength = top.getZ() - bottom.getZ();
+                final int x_offset_actual = xOffset + ((plotWidth - WIDTH) / 2 + (plotWidth - WIDTH) % 2);
+                final int z_offset_actual = zOffset + ((plotLength - LENGTH) / 2 + (plotLength - LENGTH) % 2);
+
+                p1x = bottom.getX() + x_offset_actual;
+                p1z = bottom.getZ() + z_offset_actual;
+                p2x = p1x + WIDTH;
+                p2z = p1z + LENGTH;
                 allRegion = new RegionIntersection(null, plot.getRegions().toArray(new CuboidRegion[]{}));
             }
             // Paste schematic here
@@ -360,13 +367,13 @@ public abstract class SchematicHandler {
                 if (yy > plot.getArea().getMaxGenHeight() || yy < plot.getArea().getMinGenHeight()) {
                     continue;
                 }
-                for (int rz = 0; rz < blockArrayClipboard.getDimensions().getZ(); rz++) {
-                    for (int rx = 0; rx < blockArrayClipboard.getDimensions().getX(); rx++) {
+                for (int rz = 0; rz < LENGTH; rz++) {
+                    for (int rx = 0; rx < WIDTH; rx++) {
                         int xx = p1x + rx;
                         int zz = p1z + rz;
                         if (sizeMismatch && (xx < p1x || xx > p2x || zz < p1z || zz > p2z || !allRegion.contains(BlockVector3.at(
                                 xx,
-                                ry,
+                                yy,
                                 zz
                         )))) {
                             continue;
@@ -374,8 +381,10 @@ public abstract class SchematicHandler {
                         BlockVector3 loc = BlockVector3.at(rx, ry, rz);
                         BaseBlock id = blockArrayClipboard.getFullBlock(loc);
                         queue.setBlock(xx, yy, zz, id);
-                        BiomeType biome = blockArrayClipboard.getBiome(loc);
-                        queue.setBiome(xx, yy, zz, biome);
+                        if (clipboard.hasBiomes()) {
+                            BiomeType biome = blockArrayClipboard.getBiome(loc);
+                            queue.setBiome(xx, yy, zz, biome);
+                        }
                     }
                 }
             }
@@ -704,7 +713,7 @@ public abstract class SchematicHandler {
                                     int relativeX = currentX - minX;
                                     BlockVector3 point = BlockVector3.at(currentX, currentY, currentZ);
                                     if (multipleRegions && !intersection.contains(point)) {
-                                        String blockKey = BlockTypes.AIR.getDefaultState().getAsString();
+                                        String blockKey = BlockTypes.STRUCTURE_VOID.getDefaultState().getAsString();
                                         int blockId;
                                         if (palette.containsKey(blockKey)) {
                                             blockId = palette.get(blockKey);

@@ -739,7 +739,7 @@ public class SquarePlotModificationManager implements PlotModificationManager {
                             final Runnable clearDone = () -> {
                                 QueueCoordinator queue = SquarePlotModificationManager.this.plot.getArea().getQueue();
                                 for (final Plot current : plot.getConnectedPlots()) {
-                                    SquarePlotModificationManager.this.plot.getManager().claimPlot(current, queue);
+                                    plot.getManager().claimPlot(current, queue);
                                 }
                                 if (queue.size() > 0) {
                                     queue.enqueue();
@@ -754,16 +754,12 @@ public class SquarePlotModificationManager implements PlotModificationManager {
                             }
                             return;
                         }
-                        final Runnable task = this;
                         CuboidRegion region = regions.poll();
-                        Location[] corners = Plot.getCorners(
-                                SquarePlotModificationManager.this.plot.getWorldName(),
-                                region
-                        );
-                        final Location pos1 = corners[0];
-                        final Location pos2 = corners[1];
-                        Location newPos = pos1.add(offsetX, 0, offsetZ).withWorld(destination.getWorldName());
-                        PlotSquared.platform().regionManager().copyRegion(pos1, pos2, newPos, actor, task);
+                        Location[] corners = Plot.getCorners(plot.getWorldName(), region);
+                        Location pos1 = corners[0];
+                        Location pos2 = corners[1];
+                        Location pos3 = pos1.add(offsetX, 0, offsetZ).withWorld(destination.getWorldName());
+                        PlotSquared.platform().regionManager().copyRegion(pos1, pos2, pos3, actor, this);
                     }
                 }.run();
             }
