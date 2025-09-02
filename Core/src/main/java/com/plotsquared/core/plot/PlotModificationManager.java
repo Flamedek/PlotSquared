@@ -18,17 +18,52 @@
  */
 package com.plotsquared.core.plot;
 
+import com.google.inject.Inject;
 import com.plotsquared.core.PlotSquared;
+import com.plotsquared.core.configuration.ConfigurationUtil;
+import com.plotsquared.core.configuration.Settings;
+import com.plotsquared.core.configuration.caption.Caption;
+import com.plotsquared.core.configuration.caption.LocaleHolder;
+import com.plotsquared.core.configuration.caption.TranslatableCaption;
+import com.plotsquared.core.database.DBFunc;
+import com.plotsquared.core.events.PlotComponentSetEvent;
+import com.plotsquared.core.events.PlotMergeEvent;
+import com.plotsquared.core.events.PlotUnlinkEvent;
+import com.plotsquared.core.events.Result;
+import com.plotsquared.core.generator.ClassicPlotWorld;
+import com.plotsquared.core.generator.SquarePlotWorld;
+import com.plotsquared.core.inject.factory.ProgressSubscriberFactory;
 import com.plotsquared.core.location.Direction;
+import com.plotsquared.core.location.Location;
 import com.plotsquared.core.player.PlotPlayer;
+import com.plotsquared.core.plot.flag.PlotFlag;
 import com.plotsquared.core.queue.QueueCoordinator;
+import com.plotsquared.core.util.task.TaskManager;
+import com.plotsquared.core.util.task.TaskTime;
 import com.sk89q.worldedit.function.pattern.Pattern;
+import com.sk89q.worldedit.math.BlockVector2;
+import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.world.biome.BiomeType;
+import com.sk89q.worldedit.world.block.BlockTypes;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 public interface PlotModificationManager {
 
@@ -98,7 +133,7 @@ public interface PlotModificationManager {
      * @return success/!cancelled
      * @since 6.10.9
      */
-    boolean unlinkPlot(boolean createRoad, boolean createSign, Runnable whenDone);
+    boolean unlinkPlot(final boolean createRoad, final boolean createSign, final Runnable whenDone);
 
     /**
      * Sets the sign for a plot to a specific name
