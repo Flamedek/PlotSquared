@@ -24,6 +24,7 @@ import com.plotsquared.core.backup.BackupProfile;
 import com.plotsquared.core.backup.NullBackupProfile;
 import com.plotsquared.core.backup.PlayerBackupProfile;
 import com.plotsquared.core.configuration.caption.TranslatableCaption;
+import com.plotsquared.core.exception.PlotSquaredException;
 import com.plotsquared.core.permissions.Permission;
 import com.plotsquared.core.player.PlotPlayer;
 import com.plotsquared.core.plot.Plot;
@@ -33,6 +34,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.nio.file.Files;
@@ -57,6 +60,8 @@ import java.util.stream.Stream;
         requiredType = RequiredType.PLAYER,
         permission = "plots.backup")
 public final class Backup extends Command {
+
+    private static final Logger LOGGER = LogManager.getLogger("PlotSquared/" + Backup.class.getSimpleName());
 
     private final BackupManager backupManager;
 
@@ -327,19 +332,28 @@ public final class Backup extends Command {
             if (backupProfile instanceof NullBackupProfile) {
                 player.sendMessage(
                         TranslatableCaption.of("backups.backup_impossible"),
-                        TagResolver.resolver("plot", Tag.inserting(
-                                TranslatableCaption.of("generic.generic_other").toComponent(player)
-                        ))
+                        TagResolver.resolver(
+                                "plot", Tag.inserting(
+                                        TranslatableCaption.of("generic.generic_other").toComponent(player)
+                                )
+                        )
                 );
             } else {
                 backupProfile.listBackups().whenComplete((backups, throwable) -> {
                     if (throwable != null) {
+                        Component reason;
+                        if (throwable instanceof PlotSquaredException pe) {
+                            reason = pe.getCaption().toComponent(player);
+                        } else {
+                            reason = Component.text(throwable.getMessage());
+                        }
                         player.sendMessage(
                                 TranslatableCaption.of("backups.backup_load_failure"),
-                                TagResolver.resolver("reason", Tag.inserting(Component.text(throwable.getMessage())))
+                                TagResolver.resolver("reason", Tag.inserting(reason))
                         );
-                        throwable.printStackTrace();
-                    } else {
+                        LOGGER.error("Error loading player ({}) backup", player.getName(), throwable);
+                        return;
+                    }
                         if (number < 1 || number > backups.size()) {
                             player.sendMessage(
                                     TranslatableCaption.of("backups.backup_impossible"),
@@ -372,13 +386,12 @@ public final class Backup extends Command {
                                                         player.sendMessage(
                                                                 TranslatableCaption.of("backups.backup_load_failure"),
                                                                 TagResolver.resolver(Placeholder.parsed("reason", error.getMessage()))
-                                                        );
-                                                    } else {
-                                                        player.sendMessage(TranslatableCaption.of("backups.backup_load_success"));
-                                                    }
-                                                })
-                                );
-                            }
+                                                    );
+                                                } else {
+                                                    player.sendMessage(TranslatableCaption.of("backups.backup_load_success"));
+                                                }
+                                            })
+                            );
                         }
                     }
                 });

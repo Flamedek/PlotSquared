@@ -98,7 +98,7 @@ public interface PlotModificationManager {
      * @return success/!cancelled
      * @since 6.10.9
      */
-    boolean unlinkPlot(boolean createRoad, boolean createSign, Runnable whenDone);
+    boolean unlinkPlot(final boolean createRoad, final boolean createSign, final Runnable whenDone);
 
     /**
      * Sets the sign for a plot to a specific name
