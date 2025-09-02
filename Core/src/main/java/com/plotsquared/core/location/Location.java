@@ -25,8 +25,10 @@ import com.plotsquared.core.plot.Plot;
 import com.plotsquared.core.plot.PlotArea;
 import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.math.Vector3;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 import org.khelekore.prtree.MBR;
 import org.khelekore.prtree.SimpleMBR;
 
@@ -451,6 +453,27 @@ public sealed class Location extends BlockLoc implements Comparable<Location> pe
         return new SimpleMBR(this.getX(), this.getX(), this.getY(), this.getY(), this.getZ(),
                 this.getZ()
         );
+    }
+
+    /**
+     * Gets a unit-vector pointing in the direction that this Location is
+     * facing.
+     *
+     * @return a vector pointing the direction of this location's {@link
+     *     #getPitch() pitch} and {@link #getYaw() yaw}
+     */
+    @NotNull
+    public Vector3 getDirection() {
+        double rotX = this.getYaw();
+        double rotY = this.getPitch();
+
+        double dirY = -Math.sin(Math.toRadians(rotY));
+        double xz = Math.cos(Math.toRadians(rotY));
+
+        double dirX = -xz * Math.sin(Math.toRadians(rotX));
+        double dirZ = xz * Math.cos(Math.toRadians(rotX));
+
+        return Vector3.at(dirX, dirY, dirZ);
     }
 
     @Override

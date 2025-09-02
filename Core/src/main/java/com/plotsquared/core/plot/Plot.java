@@ -85,6 +85,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
@@ -122,9 +123,11 @@ public class Plot {
     private static final DecimalFormat FLAG_DECIMAL_FORMAT = new DecimalFormat("0");
     private static final MiniMessage MINI_MESSAGE = MiniMessage.builder().build();
     private static final Cleaner CLEANER = Cleaner.create();
+    private static final List<Direction> DIRECTIONS;
 
     static {
         FLAG_DECIMAL_FORMAT.setMaximumFractionDigits(340);
+        DIRECTIONS = Arrays.asList(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
     }
 
     /**
@@ -138,7 +141,7 @@ public class Plot {
     /**
      * Utility used to modify the plot
      */
-    private final PlotModificationManager plotModificationManager = new PlotModificationManager(this);
+    private final PlotModificationManager plotModificationManager = new SquarePlotModificationManager(this);
     /**
      * Represents whatever the database manager needs it to: <br>
      * - A value of -1 usually indicates the plot will not be stored in the DB<br>
@@ -322,7 +325,8 @@ public class Plot {
     }
 
     /**
-     * Get the plot from a string.
+     * Get the plot from a string. Performs a check to ensure Plot#getBottomAbs is not outside world bounds
+     * (x/z +/- 30,000,000) to prevent crashes
      *
      * @param player  Provides a context for what world to search in. Prefixing the term with 'world_name;' will override this context.
      * @param arg     The search term
@@ -330,6 +334,31 @@ public class Plot {
      * @return The plot if only 1 result is found, or null
      */
     public static @Nullable Plot getPlotFromString(
+            final @Nullable PlotPlayer<?> player,
+            final @Nullable String arg,
+            final boolean message
+    ) {
+        Plot plot = getPlotFromStringUnchecked(player, arg, message);
+        if (plot != null && !WorldUtil.isValidLocation(plot.getBottomAbs())) {
+            if (message) {
+                (player == null ? ConsolePlayer.getConsole() : player).sendMessage(TranslatableCaption.of(
+                        "invalid.world_location_plot"));
+            }
+            return null;
+        }
+        return plot;
+    }
+
+    /**
+     * Get the plot from a string. Does not perform a check on world bounds.
+     *
+     * @param player  Provides a context for what world to search in. Prefixing the term with 'world_name;' will override this context.
+     * @param arg     The search term
+     * @param message If a message should be sent to the player if a plot cannot be found
+     * @return The plot if only 1 result is found, or null
+     * @since 7.5.5
+     */
+    public static @Nullable Plot getPlotFromStringUnchecked(
             final @Nullable PlotPlayer<?> player,
             final @Nullable String arg,
             final boolean message
@@ -390,13 +419,51 @@ public class Plot {
     }
 
     /**
-     * Gets a plot from a string e.g. [area];[id]
+     * Gets a plot from a string e.g. [area];[id]. Performs a check to ensure Plot#getBottomAbs is not outside world bounds
+     * (x/z +/- 30,000,000) to prevent crashes
      *
      * @param defaultArea if no area is specified
      * @param string      plot id/area + id
      * @return New or existing plot object
      */
     public static @Nullable Plot fromString(final @Nullable PlotArea defaultArea, final @NonNull String string) {
+        return fromString(defaultArea, string, null);
+    }
+
+    /**
+     * Gets a plot from a string e.g. [area];[id]. Performs a check to ensure Plot#getBottomAbs is not outside world bounds
+     * (x/z +/- 30,000,000) to prevent crashes
+     *
+     * @param defaultArea if no area is specified
+     * @param string      plot id/area + id
+     * @param player      {@link PlotPlayer} player to notify if plot is invalid (outside bounds)
+     * @return New or existing plot object
+     * @since 7.5.5
+     */
+    public static @Nullable Plot fromString(
+            final @Nullable PlotArea defaultArea,
+            final @NonNull String string,
+            final @Nullable PlotPlayer<?> player
+    ) {
+        Plot plot = fromStringUnchecked(defaultArea, string);
+        if (plot != null && !WorldUtil.isValidLocation(plot.getBottomAbs())) {
+            if (player != null) {
+                player.sendMessage(TranslatableCaption.of("invalid.world_location_plot"));
+            }
+            return null;
+        }
+        return plot;
+    }
+
+    /**
+     * Gets a plot from a string e.g. [area];[id]. Does not perform a check on world bounds.
+     *
+     * @param defaultArea if no area is specified
+     * @param string      plot id/area + id
+     * @return New or existing plot object
+     * @since 7.5.5
+     */
+    public static @Nullable Plot fromStringUnchecked(final @Nullable PlotArea defaultArea, final @NonNull String string) {
         final String[] split = string.split("[;,]");
         if (split.length == 2) {
             if (defaultArea != null) {
@@ -420,7 +487,8 @@ public class Plot {
     }
 
     /**
-     * Return a new/cached plot object at a given location.
+     * Return a new/cached plot object at a given location. Does not check world bounds for potential crashes, these should be
+     * performed before (or after) this method is used.
      *
      * <p>
      * Use {@link PlotPlayer#getCurrentPlot()} if a player is expected here.
@@ -2283,6 +2351,14 @@ public class Plot {
      */
     public @Nullable Plot getRelative(@NonNull Direction direction) {
         return this.area.getPlotAbs(this.id.getRelative(direction));
+    }
+
+    /**
+     * Gets the directions where this plot may connect to other plots
+     * @return possible connection directions
+     */
+    public @NonNull List<Direction> getRelativeDirections() {
+        return DIRECTIONS;
     }
 
     /**
